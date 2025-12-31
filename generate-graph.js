@@ -136,8 +136,8 @@ async function generateGraph() {
                     },
                     scales: {
                         x: { grid: { display: false }, ticks: { color: '#64748b' } },
-                        y: { position: 'left', title: { display: true, text: 'Download (Mbps)', color: '#38bdf8' }, ticks: { color: '#64748b' } },
-                        y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Upload (Mbps)', color: '#fbbf24' }, ticks: { color: '#64748b' } }
+                        y: { min: 0, position: 'left', title: { display: true, text: 'Download (Mbps)', color: '#38bdf8' }, ticks: { color: '#64748b' } },
+                        y1: { min: 0, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Upload (Mbps)', color: '#fbbf24' }, ticks: { color: '#64748b' } }
                     }
                 }
             });
