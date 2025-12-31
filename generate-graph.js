@@ -35,34 +35,51 @@ async function generateGraph() {
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden;
         }
         .container {
             width: 95%;
             max-width: 1200px;
+            height: calc(100vh - 4rem);
             background: var(--card-bg);
-            padding: 2.5rem;
+            padding: 2rem;
             border-radius: 1.5rem;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             margin: 2rem;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
         }
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2.5rem;
+            margin-bottom: 1.5rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            padding-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            flex-shrink: 0;
         }
-        h1 { margin: 0; font-weight: 300; font-size: 1.8rem; }
-        .stats-summary { display: flex; gap: 2rem; }
+        h1 { margin: 0; font-weight: 300; font-size: 1.6rem; }
+        .stats-summary { display: flex; gap: 1.5rem; }
         .stat-item { display: flex; flex-direction: column; align-items: flex-end; }
-        .stat-label { font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim); }
-        .stat-value { font-size: 1.25rem; font-weight: 600; }
+        .stat-label { font-size: 0.7rem; text-transform: uppercase; color: var(--text-dim); }
+        .stat-value { font-size: 1.1rem; font-weight: 600; }
         .stat-value.download { color: var(--download-color); }
         .stat-value.upload { color: var(--upload-color); }
-        .chart-wrapper { position: relative; height: 60vh; width: 100%; }
-        .footer { margin-top: 2rem; text-align: center; color: var(--text-dim); font-size: 0.85rem; }
+        .chart-wrapper { 
+            position: relative; 
+            flex: 1;
+            min-height: 0;
+            width: 100%; 
+        }
+        .footer { 
+            margin-top: 1rem; 
+            text-align: center; 
+            color: var(--text-dim); 
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
     </style>
 </head>
 <body>
