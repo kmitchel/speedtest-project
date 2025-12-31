@@ -1,10 +1,10 @@
 # Internet Speed Test Tracker
 
-A lightweight, automated tool to track your internet connection performance over time. It runs a speed test every 5 minutes and generates an interactive HTML dashboard with a dual-axis trend graph.
+A lightweight, automated tool to track your internet connection performance over time. It runs a speed test every 15 minutes and generates an interactive HTML dashboard with a dual-axis trend graph.
 
 ## Features
 
-- **Automated Tracking**: Runs a speed test every 5 minutes in the background.
+- **Automated Tracking**: Runs a speed test every 15 minutes in the background.
 - **Interactive Dashboard**: Generates `index.html` with hoverable data points to see precise speeds and timestamps.
 - **Dual-Axis Chart**: Separate scales for Download and Upload speeds to ensure both trends are clearly visible even when speeds vary significantly.
 - **Historical Trends**: Keeps a rolling history of the last 100 tests.

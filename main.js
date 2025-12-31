@@ -1,7 +1,7 @@
 const { runSpeedTest } = require('./speedtest');
 const { generateGraph } = require('./generate-graph');
 
-const INTERVAL_MINUTES = 5;
+const INTERVAL_MINUTES = 15;
 const INTERVAL_MS = INTERVAL_MINUTES * 60 * 1000;
 
 async function startApp() {
