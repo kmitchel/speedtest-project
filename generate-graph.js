@@ -113,6 +113,17 @@ async function generateGraph() {
 
             document.getElementById('lastUpdated').textContent = "Last updated: " + new Date(lastTest.timestamp).toLocaleString();
 
+            // Custom positioner to keep tooltip at bottom left
+            Chart.Tooltip.positioners.bottomLeft = function() {
+                const chart = this.chart;
+                return {
+                    x: chart.chartArea.left + 10,
+                    y: chart.chartArea.bottom - 10,
+                    xAlign: 'left',
+                    yAlign: 'bottom'
+                };
+            };
+
             const ctx = document.getElementById('speedChart').getContext('2d');
             new Chart(ctx, {
                 type: 'line',
@@ -146,6 +157,7 @@ async function generateGraph() {
                     plugins: {
                         legend: { labels: { color: '#f8fafc' } },
                         tooltip: {
+                            position: 'bottomLeft',
                             backgroundColor: '#1e293b',
                             titleColor: '#94a3b8',
                             bodyColor: '#f8fafc',
@@ -169,7 +181,10 @@ async function generateGraph() {
                                 afterBody: function(context) {
                                     const index = context[0].dataIndex;
                                     const item = speedData[index];
-                                    return \`\\nPing: \${item.ping} ms\\nJitter: \${item.jitter} ms\`;
+                                    return [
+                                        'Ping: ' + item.ping + ' ms',
+                                        'Jitter: ' + item.jitter + ' ms'
+                                    ];
                                 }
                             }
                         }
