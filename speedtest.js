@@ -2,6 +2,20 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 
+async function fetchSignalData() {
+    try {
+        const response = await fetch('http://192.168.12.1/TMI/v1/gateway?get=signal', { signal: AbortSignal.timeout(5000) });
+        if (!response.ok) return null;
+        const data = await response.json();
+        return {
+            sinr4g: data.signal?.['4g']?.sinr ?? null,
+            sinr5g: data.signal?.['5g']?.sinr ?? null
+        };
+    } catch (e) {
+        return null;
+    }
+}
+
 async function runSpeedTest(count = 1) {
     const browser = await puppeteer.launch({
         headless: true,
@@ -20,6 +34,9 @@ async function runSpeedTest(count = 1) {
         await page.setViewport({ width: 1920, height: 1080 });
 
         try {
+            // Fetch signal data in parallel with starting the speed test
+            const signalTask = fetchSignalData();
+
             await page.goto('https://openspeedtest.com/', { waitUntil: 'domcontentloaded', timeout: 60000 });
             await page.waitForSelector('#startButtonDesk', { visible: true, timeout: 30000 });
 
@@ -38,15 +55,21 @@ async function runSpeedTest(count = 1) {
                 return down && down !== '---' && up && up !== '---' && !isNaN(parseFloat(down)) && !isNaN(parseFloat(up));
             }, { timeout: 120000, polling: 1000 });
 
-            const data = await page.evaluate(() => {
+            const speedData = await page.evaluate(() => {
                 return {
                     download: parseFloat(document.querySelector('#downResult').textContent),
                     upload: parseFloat(document.querySelector('#upResultC2').textContent),
                     ping: parseFloat(document.querySelector('#pingResult').textContent),
-                    jitter: parseFloat(document.querySelector('#jitterResultC3').textContent),
-                    timestamp: new Date().toISOString()
+                    jitter: parseFloat(document.querySelector('#jitterResultC3').textContent)
                 };
             });
+
+            const signalData = await signalTask;
+            const data = {
+                ...speedData,
+                ...signalData,
+                timestamp: new Date().toISOString()
+            };
 
             console.log(`Test ${i + 1} results:`, data);
             newResults.push(data);

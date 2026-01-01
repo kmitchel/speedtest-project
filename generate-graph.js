@@ -26,6 +26,7 @@ async function generateGraph() {
             --text-dim: #94a3b8;
             --download-color: #38bdf8;
             --upload-color: #fbbf24;
+            --sinr-color: #4ade80;
         }
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -109,6 +110,10 @@ async function generateGraph() {
                     <span class="stat-label">Latest Upload</span>
                     <span class="stat-value upload">\${lastTest.upload} Mbps</span>
                 </div>
+                <div class="stat-item">
+                    <span class="stat-label">Latest 5G SINR</span>
+                    <span class="stat-value" style="color: var(--sinr-color)">\${lastTest.sinr5g ?? 'N/A'} dB</span>
+                </div>
             \`;
 
             document.getElementById('lastUpdated').textContent = "Last updated: " + new Date(lastTest.timestamp).toLocaleString();
@@ -147,6 +152,23 @@ async function generateGraph() {
                             fill: true,
                             tension: 0,
                             yAxisID: 'y1'
+                        },
+                        {
+                            label: '4G SINR',
+                            data: speedData.map(d => d.sinr4g),
+                            borderColor: '#4ade80',
+                            borderDash: [5, 5],
+                            fill: false,
+                            tension: 0,
+                            yAxisID: 'y2'
+                        },
+                        {
+                            label: '5G SINR',
+                            data: speedData.map(d => d.sinr5g),
+                            borderColor: '#22c55e',
+                            fill: false,
+                            tension: 0,
+                            yAxisID: 'y2'
                         }
                     ]
                 },
@@ -170,7 +192,8 @@ async function generateGraph() {
                                     let label = context.dataset.label || '';
                                     if (label) { label += ': '; }
                                     if (context.parsed.y !== null) {
-                                        label += context.parsed.y + ' Mbps';
+                                        const unit = label.includes('SINR') ? ' dB' : ' Mbps';
+                                        label += context.parsed.y + unit;
                                     }
                                     return label;
                                 },
@@ -199,7 +222,8 @@ async function generateGraph() {
                             } 
                         },
                         y: { min: 0, position: 'left', title: { display: true, text: 'Download (Mbps)', color: '#38bdf8' }, ticks: { color: '#64748b' } },
-                        y1: { min: 0, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Upload (Mbps)', color: '#fbbf24' }, ticks: { color: '#64748b' } }
+                        y1: { min: 0, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Upload (Mbps)', color: '#fbbf24' }, ticks: { color: '#64748b' } },
+                        y2: { min: -10, max: 40, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'SINR (dB)', color: '#4ade80' }, ticks: { color: '#64748b' } }
                     }
                 }
             });
