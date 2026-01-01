@@ -117,7 +117,7 @@ async function generateGraph() {
             Chart.Tooltip.positioners.bottomLeft = function() {
                 const chart = this.chart;
                 return {
-                    x: chart.chartArea.left + 10,
+                    x: chart.chartArea.left + 30,
                     y: chart.chartArea.bottom - 10,
                     xAlign: 'left',
                     yAlign: 'bottom'
