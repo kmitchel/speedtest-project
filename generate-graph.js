@@ -61,7 +61,29 @@ async function generateGraph() {
             padding-bottom: 1rem;
             flex-shrink: 0;
         }
-        h1 { margin: 0; font-weight: 300; font-size: 1.6rem; }
+        h1 { margin: 0; font-weight: 300; font-size: 1.6rem; flex-shrink: 0; }
+        .controls {
+            display: flex;
+            gap: 0.5rem;
+            margin: 0 1.5rem;
+        }
+        .btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--text-dim);
+            color: var(--text-dim);
+            padding: 0.25rem 0.6rem;
+            border-radius: 0.4rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+        .btn:hover, .btn.active {
+            background: var(--download-color);
+            color: #0f172a;
+            border-color: var(--download-color);
+            font-weight: 600;
+        }
         .stats-summary { display: flex; gap: 1.5rem; }
         .stat-item { display: flex; flex-direction: column; align-items: flex-end; }
         .stat-label { font-size: 0.7rem; text-transform: uppercase; color: var(--text-dim); }
@@ -81,40 +103,20 @@ async function generateGraph() {
             font-size: 0.8rem;
             flex-shrink: 0;
         }
-        .controls {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-        .btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--text-dim);
-            color: var(--text-dim);
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.9rem;
-        }
-        .btn:hover, .btn.active {
-            background: var(--download-color);
-            color: #0f172a;
-            border-color: var(--download-color);
-            font-weight: 600;
-        }
+
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>Network Performance Insights</h1>
+            <div class="controls">
+                <button class="btn active" onclick="updateTimeRange('all', this)">All Time</button>
+                <button class="btn" onclick="updateTimeRange(24, this)">24h</button>
+                <button class="btn" onclick="updateTimeRange(168, this)">7d</button>
+            </div>
             <div class="stats-summary" id="currentStats"></div>
         </header>
-        <div class="controls">
-            <button class="btn active" onclick="updateTimeRange('all', this)">All Time</button>
-            <button class="btn" onclick="updateTimeRange(24, this)">Last 24 Hours</button>
-            <button class="btn" onclick="updateTimeRange(168, this)">Last 7 Days</button>
-        </div>
         <div class="chart-wrapper">
             <canvas id="speedChart"></canvas>
         </div>
