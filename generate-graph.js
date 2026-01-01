@@ -16,7 +16,7 @@ async function generateGraph() {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Network Speed Tracker</title>
+    <title>Network Performance Insights</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -86,7 +86,7 @@ async function generateGraph() {
 <body>
     <div class="container">
         <header>
-            <h1>Internet Speed Test</h1>
+            <h1>Network Performance Insights</h1>
             <div class="stats-summary" id="currentStats"></div>
         </header>
         <div class="chart-wrapper">
