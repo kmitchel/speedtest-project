@@ -142,6 +142,7 @@ async function generateGraph() {
                             backgroundColor: 'rgba(56, 189, 248, 0.1)',
                             fill: true,
                             tension: 0,
+                            borderWidth: 1.5,
                             yAxisID: 'y'
                         },
                         {
@@ -151,6 +152,7 @@ async function generateGraph() {
                             backgroundColor: 'rgba(251, 191, 36, 0.1)',
                             fill: true,
                             tension: 0,
+                            borderWidth: 1.5,
                             yAxisID: 'y1'
                         },
                         {
@@ -160,6 +162,7 @@ async function generateGraph() {
                             borderDash: [5, 5],
                             fill: false,
                             tension: 0,
+                            borderWidth: 1.5,
                             yAxisID: 'y2'
                         },
                         {
@@ -168,6 +171,7 @@ async function generateGraph() {
                             borderColor: '#22c55e',
                             fill: false,
                             tension: 0,
+                            borderWidth: 1.5,
                             yAxisID: 'y2'
                         }
                     ]
