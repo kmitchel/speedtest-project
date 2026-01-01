@@ -81,6 +81,27 @@ async function generateGraph() {
             font-size: 0.8rem;
             flex-shrink: 0;
         }
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--text-dim);
+            color: var(--text-dim);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        .btn:hover, .btn.active {
+            background: var(--download-color);
+            color: #0f172a;
+            border-color: var(--download-color);
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -89,17 +110,25 @@ async function generateGraph() {
             <h1>Network Performance Insights</h1>
             <div class="stats-summary" id="currentStats"></div>
         </header>
+        <div class="controls">
+            <button class="btn active" onclick="updateTimeRange('all', this)">All Time</button>
+            <button class="btn" onclick="updateTimeRange(24, this)">Last 24 Hours</button>
+            <button class="btn" onclick="updateTimeRange(168, this)">Last 7 Days</button>
+        </div>
         <div class="chart-wrapper">
             <canvas id="speedChart"></canvas>
         </div>
         <div class="footer" id="lastUpdated"></div>
     </div>
     <script>
-        const speedData = ${JSON.stringify(data)};
+        const allData = ${JSON.stringify(data)};
+        let chartInstance = null;
         
         function initDashboard() {
-            if (!speedData || speedData.length === 0) return;
-            const lastTest = speedData[speedData.length - 1];
+            if (!allData || allData.length === 0) return;
+            
+            // Stats always show the very latest data point
+            const lastTest = allData[allData.length - 1];
             
             document.getElementById('currentStats').innerHTML = \`
                 <div class="stat-item">
@@ -118,7 +147,6 @@ async function generateGraph() {
 
             document.getElementById('lastUpdated').textContent = "Last updated: " + new Date(lastTest.timestamp).toLocaleString();
 
-            // Custom positioner to keep tooltip at bottom left
             Chart.Tooltip.positioners.bottomLeft = function() {
                 const chart = this.chart;
                 return {
@@ -128,16 +156,41 @@ async function generateGraph() {
                     yAlign: 'bottom'
                 };
             };
+            
+            // Initial render
+            updateTimeRange('all');
+        }
 
+        function updateTimeRange(hours, btn) {
+            if (btn) {
+                document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            }
+
+            let filteredData = allData;
+            if (hours !== 'all') {
+                const cutoff = Date.now() - (hours * 60 * 60 * 1000);
+                filteredData = allData.filter(d => d.timestamp >= cutoff);
+            }
+            
+            renderChart(filteredData);
+        }
+
+        function renderChart(data) {
             const ctx = document.getElementById('speedChart').getContext('2d');
-            new Chart(ctx, {
+            
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: speedData.map(d => new Date(d.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })),
+                    labels: data.map(d => new Date(d.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })),
                     datasets: [
                         {
                             label: 'Download Speed',
-                            data: speedData.map(d => d.download),
+                            data: data.map(d => d.download),
                             borderColor: '#38bdf8',
                             backgroundColor: 'rgba(56, 189, 248, 0.1)',
                             fill: true,
@@ -147,7 +200,7 @@ async function generateGraph() {
                         },
                         {
                             label: 'Upload Speed',
-                            data: speedData.map(d => d.upload),
+                            data: data.map(d => d.upload),
                             borderColor: '#fbbf24',
                             backgroundColor: 'rgba(251, 191, 36, 0.1)',
                             fill: true,
@@ -157,7 +210,7 @@ async function generateGraph() {
                         },
                         {
                             label: '4G SINR',
-                            data: speedData.map(d => d.sinr4g),
+                            data: data.map(d => d.sinr4g),
                             borderColor: '#4ade80',
                             borderDash: [5, 5],
                             fill: false,
@@ -167,7 +220,7 @@ async function generateGraph() {
                         },
                         {
                             label: '5G SINR',
-                            data: speedData.map(d => d.sinr5g),
+                            data: data.map(d => d.sinr5g),
                             borderColor: '#22c55e',
                             fill: false,
                             tension: 0,
@@ -180,6 +233,7 @@ async function generateGraph() {
                     responsive: true,
                     maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
+                    animation: { duration: 0 },
                     plugins: {
                         legend: { labels: { color: '#f8fafc' } },
                         tooltip: {
@@ -203,11 +257,11 @@ async function generateGraph() {
                                 },
                                 title: function(context) {
                                     const index = context[0].dataIndex;
-                                    return new Date(speedData[index].timestamp).toLocaleString();
+                                    return new Date(data[index].timestamp).toLocaleString();
                                 },
                                 afterBody: function(context) {
                                     const index = context[0].dataIndex;
-                                    const item = speedData[index];
+                                    const item = data[index];
                                     return [
                                         'Ping: ' + item.ping + ' ms',
                                         'Jitter: ' + item.jitter + ' ms'
