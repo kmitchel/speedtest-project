@@ -170,7 +170,7 @@ async function generateGraph() {
             let filteredData = allData;
             if (hours !== 'all') {
                 const cutoff = Date.now() - (hours * 60 * 60 * 1000);
-                filteredData = allData.filter(d => d.timestamp >= cutoff);
+                filteredData = allData.filter(d => new Date(d.timestamp).getTime() >= cutoff);
             }
             
             renderChart(filteredData);
