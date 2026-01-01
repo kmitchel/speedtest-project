@@ -41,7 +41,7 @@ async function generateGraph() {
         }
         .container {
             width: 95%;
-            max-width: 1200px;
+            max-width: 1800px;
             height: calc(100vh - 4rem);
             background: var(--card-bg);
             padding: 2rem;
