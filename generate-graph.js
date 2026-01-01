@@ -146,8 +146,31 @@ async function generateGraph() {
                     plugins: {
                         legend: { labels: { color: '#f8fafc' } },
                         tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleColor: '#94a3b8',
+                            bodyColor: '#f8fafc',
+                            borderColor: 'rgba(255,255,255,0.1)',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: true,
                             callbacks: {
-                                title: (items) => new Date(speedData[items[0].dataIndex].timestamp).toLocaleString()
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) { label += ': '; }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y + ' Mbps';
+                                    }
+                                    return label;
+                                },
+                                title: function(context) {
+                                    const index = context[0].dataIndex;
+                                    return new Date(speedData[index].timestamp).toLocaleString();
+                                },
+                                afterBody: function(context) {
+                                    const index = context[0].dataIndex;
+                                    const item = speedData[index];
+                                    return \`\\nPing: \${item.ping} ms\\nJitter: \${item.jitter} ms\`;
+                                }
                             }
                         }
                     },
