@@ -1,6 +1,7 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
+const sqlite3 = require('sqlite3').verbose();
 
 async function fetchSignalData() {
     try {
@@ -87,25 +88,31 @@ async function runSpeedTest(count = 1) {
     await browser.close();
 
     if (newResults.length > 0) {
-        const resultsPath = path.join(__dirname, 'results.json');
-        let history = [];
-        if (fs.existsSync(resultsPath)) {
-            try {
-                history = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
-            } catch (e) {
-                history = [];
-            }
-        }
+        const dbPath = path.join(__dirname, 'speedtest.db');
+        const db = new sqlite3.Database(dbPath);
 
-        history.push(...newResults);
+        const stmt = db.prepare(`INSERT INTO results (timestamp, download, upload, ping, jitter, sinr4g, sinr5g) VALUES (?, ?, ?, ?, ?, ?, ?)`);
 
-        // Keep only last 100 results
-        if (history.length > 100) {
-            history = history.slice(-100);
-        }
-
-        fs.writeFileSync(resultsPath, JSON.stringify(history, null, 2));
-        console.log(`History updated. Total records: ${history.length}`);
+        db.serialize(() => {
+            db.run("BEGIN TRANSACTION");
+            newResults.forEach(row => {
+                stmt.run(
+                    row.timestamp,
+                    row.download,
+                    row.upload,
+                    row.ping,
+                    row.jitter,
+                    row.sinr4g ?? null,
+                    row.sinr5g ?? null
+                );
+            });
+            db.run("COMMIT", (err) => {
+                if (err) console.error('Error saving to DB:', err);
+                else console.log(`Database updated. Added ${newResults.length} records.`);
+                db.close();
+            });
+            stmt.finalize();
+        });
     }
 
     return newResults;

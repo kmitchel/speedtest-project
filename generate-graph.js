@@ -1,14 +1,35 @@
 const fs = require('fs');
 const path = require('path');
+const sqlite3 = require('sqlite3').verbose();
 
 async function generateGraph() {
-    const resultsPath = path.join(__dirname, 'results.json');
-    if (!fs.existsSync(resultsPath)) {
-        console.error('results.json not found. Run speedtest.js first.');
+    const dbPath = path.join(__dirname, 'speedtest.db');
+
+    let data = [];
+    try {
+        data = await new Promise((resolve, reject) => {
+            const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READONLY, (err) => {
+                if (err) {
+                    console.error('Database not found or could not be opened. Run speedtest.js first.');
+                    resolve([]);
+                    return;
+                }
+            });
+
+            db.all("SELECT * FROM results ORDER BY timestamp ASC", [], (err, rows) => {
+                db.close();
+                if (err) reject(err);
+                else resolve(rows);
+            });
+        });
+    } catch (err) {
+        console.error('Error reading database:', err);
         return;
     }
 
-    const data = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
+    if (data.length === 0) {
+        console.log("No data found in database.");
+    }
 
     // Inject data into the HTML template
     const htmlContent = `<!DOCTYPE html>

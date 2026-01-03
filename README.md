@@ -7,7 +7,7 @@ A lightweight, automated tool to track your internet connection performance over
 - **Automated Tracking**: Runs a speed test every 15 minutes in the background.
 - **Interactive Dashboard**: Generates `index.html` with hoverable data points to see precise speeds and timestamps.
 - **Dual-Axis Chart**: Separate scales for Download and Upload speeds to ensure both trends are clearly visible even when speeds vary significantly.
-- **Historical Trends**: Keeps a rolling history of the last 100 tests.
+- **Historical Trends**: Stores all test results in a local SQLite database for long-term analysis.
 - **Headless Execution**: Uses Puppeteer with OpenSpeedTest.com for reliable results without a GUI.
 
 ## Prerequisites

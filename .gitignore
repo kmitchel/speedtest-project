@@ -1,5 +1,3 @@
-node_modules/
-results.json
-index.html
-.env
-*.log
+node_modules
+.DS_Store
+speedtest.db
