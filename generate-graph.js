@@ -37,7 +37,7 @@ async function generateGraph() {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Network Performance Insights</title>
+    <title>Internet Performance Insights</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -130,7 +130,7 @@ async function generateGraph() {
 <body>
     <div class="container">
         <header>
-            <h1>Network Performance Insights</h1>
+            <h1>Internet Performance Insights</h1>
             <div class="controls">
                 <button class="btn active" onclick="updateTimeRange('all', this)">All Time</button>
                 <button class="btn" onclick="updateTimeRange(24, this)">24h</button>
