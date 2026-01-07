@@ -39,6 +39,7 @@ async function generateGraph() {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Internet Performance Insights</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -47,10 +48,11 @@ async function generateGraph() {
             --text-dim: #94a3b8;
             --download-color: #38bdf8;
             --upload-color: #fbbf24;
-            --sinr-color: #4ade80;
+            --sinr-color: #a855f7;
+            --grid-color: rgba(148, 163, 184, 0.1);
         }
         body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            font-family: 'Outfit', 'Inter', system-ui, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
             margin: 0;
@@ -61,56 +63,58 @@ async function generateGraph() {
             overflow: hidden;
         }
         .container {
-            width: 95%;
-            max-width: 1800px;
-            height: calc(100vh - 4rem);
+            width: calc(100vw - 2rem);
+            height: calc(100vh - 2rem);
             background: var(--card-bg);
-            padding: 2rem;
+            padding: 1rem;
             border-radius: 1.5rem;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            margin: 2rem;
+            margin: 1rem;
             display: flex;
             flex-direction: column;
             box-sizing: border-box;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             padding-bottom: 1rem;
+            border-bottom: 1px solid var(--grid-color);
             flex-shrink: 0;
         }
-        h1 { margin: 0; font-weight: 300; font-size: 1.6rem; flex-shrink: 0; }
+        h1 { margin: 0; font-weight: 300; font-size: 1.8rem; letter-spacing: -0.02em; }
         .controls {
             display: flex;
             gap: 0.5rem;
-            margin: 0 1.5rem;
+            background: rgba(15, 23, 42, 0.5);
+            padding: 0.3rem;
+            border-radius: 0.6rem;
         }
         .btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--text-dim);
+            background: transparent;
+            border: none;
             color: var(--text-dim);
-            padding: 0.25rem 0.6rem;
+            padding: 0.4rem 1rem;
             border-radius: 0.4rem;
             cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.75rem;
-            white-space: nowrap;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.85rem;
+            font-weight: 500;
         }
-        .btn:hover, .btn.active {
+        .btn:hover { color: var(--text-main); }
+        .btn.active {
             background: var(--download-color);
             color: #0f172a;
-            border-color: var(--download-color);
-            font-weight: 600;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
         }
-        .stats-summary { display: flex; gap: 1.5rem; }
+        .stats-summary { display: flex; gap: 2rem; }
         .stat-item { display: flex; flex-direction: column; align-items: flex-end; }
-        .stat-label { font-size: 0.7rem; text-transform: uppercase; color: var(--text-dim); }
-        .stat-value { font-size: 1.1rem; font-weight: 600; }
-        .stat-value.download { color: var(--download-color); }
-        .stat-value.upload { color: var(--upload-color); }
+        .stat-label { font-size: 0.65rem; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.1em; margin-bottom: 0.2rem; }
+        .stat-value { font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+        
         .chart-wrapper { 
             position: relative; 
             flex: 1;
@@ -121,16 +125,16 @@ async function generateGraph() {
             margin-top: 1rem; 
             text-align: center; 
             color: var(--text-dim); 
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             flex-shrink: 0;
+            opacity: 0.7;
         }
-
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Internet Performance Insights</h1>
+            <h1>Internet Performance <span style="font-weight: 600; color: var(--download-color)">Insights</span></h1>
             <div class="controls">
                 <button class="btn active" onclick="updateTimeRange('all', this)">All Time</button>
                 <button class="btn" onclick="updateTimeRange(24, this)">24h</button>
@@ -150,37 +154,22 @@ async function generateGraph() {
         function initDashboard() {
             if (!allData || allData.length === 0) return;
             
-            // Stats always show the very latest data point
             const lastTest = allData[allData.length - 1];
-            
             document.getElementById('currentStats').innerHTML = \`
                 <div class="stat-item">
-                    <span class="stat-label">Latest Download</span>
-                    <span class="stat-value download">\${lastTest.download} Mbps</span>
+                    <span class="stat-label">Download</span>
+                    <span class="stat-value" style="color: var(--download-color)">\${lastTest.download} <small>Mbps</small></span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">Latest Upload</span>
-                    <span class="stat-value upload">\${lastTest.upload} Mbps</span>
+                    <span class="stat-label">Upload</span>
+                    <span class="stat-value" style="color: var(--upload-color)">\${lastTest.upload} <small>Mbps</small></span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">Latest 5G SINR</span>
-                    <span class="stat-value" style="color: var(--sinr-color)">\${lastTest.sinr5g ?? 'N/A'} dB</span>
+                    <span class="stat-label">5G SINR</span>
+                    <span class="stat-value" style="color: var(--sinr-color)">\${lastTest.sinr5g ?? 'N/A'} <small>dB</small></span>
                 </div>
             \`;
-
-            document.getElementById('lastUpdated').textContent = "Last updated: " + new Date(lastTest.timestamp).toLocaleString();
-
-            Chart.Tooltip.positioners.bottomLeft = function() {
-                const chart = this.chart;
-                return {
-                    x: chart.chartArea.left + 30,
-                    y: chart.chartArea.bottom - 10,
-                    xAlign: 'left',
-                    yAlign: 'bottom'
-                };
-            };
-            
-            // Initial render
+            document.getElementById('lastUpdated').textContent = "Last sync: " + new Date(lastTest.timestamp).toLocaleString();
             updateTimeRange('all');
         }
 
@@ -189,66 +178,99 @@ async function generateGraph() {
                 document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
             }
-
             let filteredData = allData;
             if (hours !== 'all') {
                 const cutoff = Date.now() - (hours * 60 * 60 * 1000);
                 filteredData = allData.filter(d => new Date(d.timestamp).getTime() >= cutoff);
             }
-            
             renderChart(filteredData);
         }
 
         function renderChart(data) {
             const ctx = document.getElementById('speedChart').getContext('2d');
-            
-            if (chartInstance) {
-                chartInstance.destroy();
-            }
+            if (chartInstance) chartInstance.destroy();
+
+            const dayShadingPlugin = {
+                id: 'dayShading',
+                beforeDraw: (chart) => {
+                    const { ctx, chartArea, scales: { x } } = chart;
+                    if (!x || !chartArea) return;
+                    const oneDay = 24 * 60 * 60 * 1000;
+                    const startTick = Math.floor(x.min / oneDay) * oneDay;
+                    ctx.save();
+                    for (let t = startTick; t < x.max; t += oneDay) {
+                        const dayNum = Math.floor(t / oneDay);
+                        if (dayNum % 2 === 0) {
+                            const left = Math.max(x.getPixelForValue(t), chartArea.left);
+                            const right = Math.min(x.getPixelForValue(t + oneDay), chartArea.right);
+                            if (right > left) {
+                                ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+                                ctx.fillRect(left, chartArea.top, right - left, chartArea.bottom - chartArea.top);
+                                ctx.strokeStyle = 'rgba(56, 189, 248, 0.15)';
+                                ctx.lineWidth = 1;
+                                ctx.beginPath();
+                                ctx.moveTo(left, chartArea.top);
+                                ctx.lineTo(left, chartArea.bottom);
+                                ctx.stroke();
+                            }
+                        }
+                    }
+                    ctx.restore();
+                }
+            };
 
             chartInstance = new Chart(ctx, {
                 type: 'line',
+                plugins: [dayShadingPlugin],
                 data: {
-                    labels: data.map(d => new Date(d.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })),
                     datasets: [
                         {
                             label: 'Download Speed',
-                            data: data.map(d => d.download),
+                            data: data.map(d => ({ x: d.timestamp, y: d.download })),
                             borderColor: '#38bdf8',
-                            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                            backgroundColor: 'rgba(56, 189, 248, 0.05)',
                             fill: true,
-                            tension: 0,
-                            borderWidth: 1.5,
+                            tension: 0.4,
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            pointHoverRadius: 6,
                             yAxisID: 'y'
                         },
                         {
                             label: 'Upload Speed',
-                            data: data.map(d => d.upload),
+                            data: data.map(d => ({ x: d.timestamp, y: d.upload })),
                             borderColor: '#fbbf24',
-                            backgroundColor: 'rgba(251, 191, 36, 0.1)',
+                            backgroundColor: 'rgba(251, 191, 36, 0.05)',
                             fill: true,
-                            tension: 0,
-                            borderWidth: 1.5,
-                            yAxisID: 'y1'
+                            tension: 0.4,
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            pointHoverRadius: 6,
+                            yAxisID: 'y1',
+                            hidden: true
                         },
                         {
                             label: '4G SINR',
-                            data: data.map(d => d.sinr4g),
+                            data: data.map(d => ({ x: d.timestamp, y: d.sinr4g })),
                             borderColor: '#4ade80',
-                            borderDash: [5, 5],
                             fill: false,
-                            tension: 0,
+                            tension: 0.4,
                             borderWidth: 1.5,
-                            yAxisID: 'y2'
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            yAxisID: 'y2',
+                            hidden: true
                         },
                         {
                             label: '5G SINR',
-                            data: data.map(d => d.sinr5g),
-                            borderColor: '#22c55e',
+                            data: data.map(d => ({ x: d.timestamp, y: d.sinr5g })),
+                            borderColor: '#a855f7',
                             fill: false,
-                            tension: 0,
-                            borderWidth: 1.5,
-                            yAxisID: 'y2'
+                            tension: 0.4,
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            yAxisID: 'y2',
+                            hidden: true
                         }
                     ]
                 },
@@ -256,36 +278,32 @@ async function generateGraph() {
                     responsive: true,
                     maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
-                    animation: { duration: 0 },
+                    animation: { duration: 400 },
                     plugins: {
-                        legend: { labels: { color: '#f8fafc' } },
+                        legend: { 
+                            position: 'top',
+                            align: 'end',
+                            labels: { color: '#94a3b8', boxWidth: 12, usePointStyle: true, pointStyle: 'circle', padding: 20, font: { size: 11 } } 
+                        },
                         tooltip: {
-                            position: 'bottomLeft',
                             backgroundColor: '#1e293b',
                             titleColor: '#94a3b8',
                             bodyColor: '#f8fafc',
                             borderColor: 'rgba(255,255,255,0.1)',
                             borderWidth: 1,
                             padding: 12,
-                            displayColors: true,
+                            cornerRadius: 8,
                             callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) { label += ': '; }
-                                    if (context.parsed.y !== null) {
-                                        const unit = label.includes('SINR') ? ' dB' : ' Mbps';
-                                        label += context.parsed.y + unit;
-                                    }
-                                    return label;
-                                },
-                                title: function(context) {
-                                    const index = context[0].dataIndex;
-                                    return new Date(data[index].timestamp).toLocaleString();
-                                },
-                                afterBody: function(context) {
-                                    const index = context[0].dataIndex;
-                                    const item = data[index];
+                                label: () => null,
+                                title: (items) => new Date(items[0].parsed.x).toLocaleString(),
+                                afterBody: (items) => {
+                                    const item = data[items[0].dataIndex];
                                     return [
+                                        '',
+                                        'Download: ' + item.download + ' Mbps',
+                                        'Upload: ' + item.upload + ' Mbps',
+                                        '4G SINR: ' + (item.sinr4g ?? 'N/A') + ' dB',
+                                        '5G SINR: ' + (item.sinr5g ?? 'N/A') + ' dB',
                                         'Ping: ' + item.ping + ' ms',
                                         'Jitter: ' + item.jitter + ' ms'
                                     ];
@@ -294,17 +312,40 @@ async function generateGraph() {
                         }
                     },
                     scales: {
-                        x: { 
-                            grid: { display: false }, 
+                        x: {
+                            type: 'time',
+                            time: { 
+                                tooltipFormat: 'PPp',
+                                displayFormats: { 
+                                    hour: 'HH:mm', 
+                                    day: 'MMM d',
+                                    week: 'MMM d'
+                                }
+                            },
+                            grid: { display: false },
                             ticks: { 
-                                color: '#64748b',
+                                color: '#64748b', 
+                                font: { size: 10 }, 
+                                maxRotation: 0,
                                 autoSkip: true,
-                                maxTicksLimit: 10
-                            } 
+                                maxTicksLimit: 12
+                            }
                         },
-                        y: { min: 0, position: 'left', title: { display: true, text: 'Download (Mbps)', color: '#38bdf8' }, ticks: { color: '#64748b' } },
-                        y1: { min: 0, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Upload (Mbps)', color: '#fbbf24' }, ticks: { color: '#64748b' } },
-                        y2: { min: -10, max: 40, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'SINR (dB)', color: '#4ade80' }, ticks: { color: '#64748b' } }
+                        y: { 
+                            position: 'left', 
+                            grid: { color: 'rgba(255,255,255,0.03)' },
+                            title: { display: true, text: 'DOWN (MBPS)', color: '#38bdf8', font: { size: 10, weight: 600 } }, 
+                            ticks: { color: '#64748b' } 
+                        },
+                        y1: { 
+                            position: 'right', 
+                            grid: { display: false },
+                            title: { display: true, text: 'UP (MBPS)', color: '#fbbf24', font: { size: 10, weight: 600 } }, 
+                            ticks: { color: '#64748b' } 
+                        },
+                        y2: { 
+                            display: false 
+                        }
                     }
                 }
             });
