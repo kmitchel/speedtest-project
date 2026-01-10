@@ -3,19 +3,6 @@ const fs = require('fs');
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 
-async function fetchSignalData() {
-    try {
-        const response = await fetch('http://192.168.12.1/TMI/v1/gateway?get=signal', { signal: AbortSignal.timeout(5000) });
-        if (!response.ok) return null;
-        const data = await response.json();
-        return {
-            sinr4g: data.signal?.['4g']?.sinr ?? null,
-            sinr5g: data.signal?.['5g']?.sinr ?? null
-        };
-    } catch (e) {
-        return null;
-    }
-}
 
 async function runSpeedTest(count = 1) {
     const browser = await puppeteer.launch({
@@ -35,8 +22,6 @@ async function runSpeedTest(count = 1) {
         await page.setViewport({ width: 1920, height: 1080 });
 
         try {
-            // Fetch signal data in parallel with starting the speed test
-            const signalTask = fetchSignalData();
 
             await page.goto('https://openspeedtest.com/', { waitUntil: 'domcontentloaded', timeout: 60000 });
             await page.waitForSelector('#startButtonDesk', { visible: true, timeout: 30000 });
@@ -65,10 +50,8 @@ async function runSpeedTest(count = 1) {
                 };
             });
 
-            const signalData = await signalTask;
             const data = {
                 ...speedData,
-                ...signalData,
                 timestamp: new Date().toISOString()
             };
 
@@ -98,12 +81,10 @@ async function runSpeedTest(count = 1) {
                 download REAL,
                 upload REAL,
                 ping REAL,
-                jitter REAL,
-                sinr4g REAL,
-                sinr5g REAL
+                jitter REAL
             )`);
 
-            const stmt = db.prepare(`INSERT INTO results (timestamp, download, upload, ping, jitter, sinr4g, sinr5g) VALUES (?, ?, ?, ?, ?, ?, ?)`);
+            const stmt = db.prepare(`INSERT INTO results (timestamp, download, upload, ping, jitter) VALUES (?, ?, ?, ?, ?)`);
 
             db.run("BEGIN TRANSACTION");
             newResults.forEach(row => {
@@ -112,9 +93,7 @@ async function runSpeedTest(count = 1) {
                     row.download,
                     row.upload,
                     row.ping,
-                    row.jitter,
-                    row.sinr4g ?? null,
-                    row.sinr5g ?? null
+                    row.jitter
                 );
             });
             db.run("COMMIT", (err) => {

@@ -23,9 +23,7 @@ async function generateGraph() {
                     download REAL,
                     upload REAL,
                     ping REAL,
-                    jitter REAL,
-                    sinr4g REAL,
-                    sinr5g REAL
+                    jitter REAL
                 )`, (err) => {
                     if (err) {
                         console.error('Error creating table:', err);
@@ -72,7 +70,6 @@ async function generateGraph() {
             --text-dim: #94a3b8;
             --download-color: #38bdf8;
             --upload-color: #fbbf24;
-            --sinr-color: #a855f7;
             --grid-color: rgba(148, 163, 184, 0.1);
         }
         body {
@@ -188,10 +185,6 @@ async function generateGraph() {
                     <span class="stat-label">Upload</span>
                     <span class="stat-value" style="color: var(--upload-color)">\${lastTest.upload} <small>Mbps</small></span>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-label">5G SINR</span>
-                    <span class="stat-value" style="color: var(--sinr-color)">\${lastTest.sinr5g ?? 'N/A'} <small>dB</small></span>
-                </div>
             \`;
             document.getElementById('lastUpdated').textContent = "Last sync: " + new Date(lastTest.timestamp).toLocaleString();
             updateTimeRange('all');
@@ -273,28 +266,6 @@ async function generateGraph() {
                             yAxisID: 'y1',
                             hidden: true
                         },
-                        {
-                            label: '4G SINR',
-                            data: data.map(d => ({ x: d.timestamp, y: d.sinr4g })),
-                            borderColor: '#4ade80',
-                            fill: false,
-                            tension: 0.4,
-                            borderWidth: 1.5,
-                            borderDash: [5, 5],
-                            pointRadius: 0,
-                            yAxisID: 'y2',
-                            hidden: true
-                        },
-                        {
-                            label: '5G SINR',
-                            data: data.map(d => ({ x: d.timestamp, y: d.sinr5g })),
-                            borderColor: '#a855f7',
-                            fill: false,
-                            tension: 0.4,
-                            borderWidth: 2,
-                            pointRadius: 0,
-                            yAxisID: 'y2',
-                            hidden: true
                         }
                     ]
                 },
@@ -326,8 +297,6 @@ async function generateGraph() {
                                         '',
                                         'Download: ' + item.download + ' Mbps',
                                         'Upload: ' + item.upload + ' Mbps',
-                                        '4G SINR: ' + (item.sinr4g ?? 'N/A') + ' dB',
-                                        '5G SINR: ' + (item.sinr5g ?? 'N/A') + ' dB',
                                         'Ping: ' + item.ping + ' ms',
                                         'Jitter: ' + item.jitter + ' ms'
                                     ];
@@ -366,9 +335,6 @@ async function generateGraph() {
                             grid: { display: false },
                             title: { display: true, text: 'UP (MBPS)', color: '#fbbf24', font: { size: 10, weight: 600 } }, 
                             ticks: { color: '#64748b' } 
-                        },
-                        y2: { 
-                            display: false 
                         }
                     }
                 }
