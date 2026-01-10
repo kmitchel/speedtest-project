@@ -8,18 +8,42 @@ async function generateGraph() {
     let data = [];
     try {
         data = await new Promise((resolve, reject) => {
-            const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READONLY, (err) => {
+            const db = new sqlite3.Database(dbPath, (err) => {
                 if (err) {
-                    console.error('Database not found or could not be opened. Run speedtest.js first.');
+                    console.error('Could not open database:', err);
                     resolve([]);
                     return;
                 }
             });
 
-            db.all("SELECT * FROM results ORDER BY timestamp ASC", [], (err, rows) => {
-                db.close();
-                if (err) reject(err);
-                else resolve(rows);
+            db.serialize(() => {
+                // Ensure the table exists so the query doesn't fail
+                db.run(`CREATE TABLE IF NOT EXISTS results (
+                    timestamp TEXT,
+                    download REAL,
+                    upload REAL,
+                    ping REAL,
+                    jitter REAL,
+                    sinr4g REAL,
+                    sinr5g REAL
+                )`, (err) => {
+                    if (err) {
+                        console.error('Error creating table:', err);
+                        db.close();
+                        resolve([]);
+                        return;
+                    }
+
+                    db.all("SELECT * FROM results ORDER BY timestamp ASC", [], (err, rows) => {
+                        db.close();
+                        if (err) {
+                            console.error('Error querying database:', err);
+                            resolve([]);
+                        } else {
+                            resolve(rows);
+                        }
+                    });
+                });
             });
         });
     } catch (err) {

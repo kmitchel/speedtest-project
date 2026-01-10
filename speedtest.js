@@ -91,9 +91,20 @@ async function runSpeedTest(count = 1) {
         const dbPath = path.join(__dirname, 'speedtest.db');
         const db = new sqlite3.Database(dbPath);
 
-        const stmt = db.prepare(`INSERT INTO results (timestamp, download, upload, ping, jitter, sinr4g, sinr5g) VALUES (?, ?, ?, ?, ?, ?, ?)`);
-
         db.serialize(() => {
+            // Create table if it doesn't exist
+            db.run(`CREATE TABLE IF NOT EXISTS results (
+                timestamp TEXT,
+                download REAL,
+                upload REAL,
+                ping REAL,
+                jitter REAL,
+                sinr4g REAL,
+                sinr5g REAL
+            )`);
+
+            const stmt = db.prepare(`INSERT INTO results (timestamp, download, upload, ping, jitter, sinr4g, sinr5g) VALUES (?, ?, ?, ?, ?, ?, ?)`);
+
             db.run("BEGIN TRANSACTION");
             newResults.forEach(row => {
                 stmt.run(
